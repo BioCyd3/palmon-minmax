@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://your-domain.infinityfreeapp.com/sitemap.xml
+
+# Optimize for search engines
+Crawl-delay: 1
+
+# Block sensitive areas
+Disallow: /src/
+Disallow: /tests/
+Disallow: /node_modules/
+Disallow: /.git/
+Disallow: /.kiro/

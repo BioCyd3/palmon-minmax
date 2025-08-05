@@ -1,0 +1,14 @@
+{
+  "buildTime": "2025-08-04T23:20:14.567Z",
+  "version": "1.0.0",
+  "platform": "InfinityFree",
+  "optimization": "enabled",
+  "files": 7,
+  "compressionRatio": "-81.7%",
+  "instructions": {
+    "upload": "Upload all files from the 'dist' directory to your InfinityFree public_html folder",
+    "domain": "Update the domain in robots.txt and sitemap.xml to match your InfinityFree subdomain",
+    "ssl": "Enable SSL in your InfinityFree control panel if available",
+    "cache": "The .htaccess file is configured for optimal caching"
+  }
+}
