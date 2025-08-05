@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Palmon World Database</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* CSS Reset and Global Styles */
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2a2a2a;
+            --bg-modal: #252525;
+            --border-color: #383838;
+            --color-primary: #e0e0e0;
+            --color-secondary: #b0b0b0;
+            --color-headings: #ffffff;
+            --accent-primary: #4a90e2;
+            --accent-secondary: #e94560;
+            --synergy-color: #4CAF50;
+            --counter-color: #F44336;
+
+            --type-earth: #8BC34A;
+            --type-water: #2196F3;
+            --type-fire: #F44336;
+            --type-electricity: #FFC107;
+            --type-unknown: #9E9E9E;
+
+            --rarity-ur: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            --rarity-ssr: linear-gradient(135deg, #ffd700, #ffb347);
+            --rarity-sr: linear-gradient(135deg, #c0c0c0, #a9a9a9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--color-primary);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            font-weight: 700;
+            color: var(--color-headings);
+        }
+
+        /* Header and Controls */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: -webkit-linear-gradient(var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        header p {
+            color: var(--color-secondary);
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-wrapper { flex-grow: 1; min-width: 250px; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: var(--color-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+        }
+        
+        .action-button {
+            padding: 12px 20px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        #reset-filters { background-color: var(--accent-secondary); }
+        #reset-filters:hover { background-color: #c73850; transform: translateY(-2px); }
+        
+        /* Analysis Section */
+        .analysis-section {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        .analysis-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            align-items: center;
+        }
+        .chart-box {
+            background-color: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .chart-box h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .type-effectiveness { text-align: center; }
+        .type-effectiveness h3 { margin-bottom: 15px; }
+        .type-effectiveness p { display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: bold; }
+        .type-icon { display: inline-block; width: 40px; height: 40px; border-radius: 50%; color: white; line-height: 40px; font-size: 0.8em; font-weight: bold; }
+
+        /* Palmon Grid */
+        #palmon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+        
+        #no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--color-secondary);
+            padding: 50px 20px;
+        }
+
+        /* Palmon Card Styling */
+        .palmon-card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-top: 5px solid;
+        }
+
+        .palmon-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); }
+        .palmon-card[data-type="Earth"] { border-top-color: var(--type-earth); }
+        .palmon-card[data-type="Water"] { border-top-color: var(--type-water); }
+        .palmon-card[data-type="Fire"] { border-top-color: var(--type-fire); }
+        .palmon-card[data-type="Electricity"] { border-top-color: var(--type-electricity); }
+        .palmon-card[data-type="Unknown"] { border-top-color: var(--type-unknown); }
+
+        .card-header { padding: 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent); }
+        .card-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .card-header-top h2 { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+        .tags { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+        .tag { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; color: #111; text-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .tag.rarity-ur { background: var(--rarity-ur); }
+        .tag.rarity-ssr { background: var(--rarity-ssr); }
+        .tag.rarity-sr { background: var(--rarity-sr); }
+        .tag.type-tag { color: white; }
+        .tag[data-type="Earth"] { background-color: var(--type-earth); }
+        .tag[data-type="Water"] { background-color: var(--type-water); }
+        .tag[data-type="Fire"] { background-color: var(--type-fire); }
+        .tag[data-type="Electricity"] { background-color: var(--type-electricity); }
+        .tag[data-type="Unknown"] { background-color: var(--type-unknown); }
+
+        .card-info { padding: 0 20px 15px; font-family: 'Roboto', sans-serif;}
+        .info-item { display: flex; font-size: 0.95rem; margin-bottom: 5px; }
+        .info-item strong { color: var(--color-secondary); font-weight: 700; margin-right: 8px; min-width: 80px; flex-shrink: 0; }
+
+        .card-body { padding: 0 20px 20px; flex-grow: 1; }
+        .skill { margin-bottom: 20px; border-left: 3px solid var(--accent-primary); padding-left: 15px; }
+        .skill h3 { font-size: 1.1rem; color: var(--color-headings); margin-bottom: 5px; }
+        .skill p { font-size: 0.95rem; font-family: 'Roboto', sans-serif; }
+
+        .card-footer { padding: 0 20px 20px; }
+        .details-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .details-btn:hover { background-color: #3a7ac8; }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-content {
+            background-color: var(--bg-modal);
+            padding: 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .modal-header h2 { font-size: 2rem; color: var(--accent-primary); }
+        .close-btn { font-size: 2rem; color: var(--color-secondary); cursor: pointer; background: none; border: none; line-height: 1; }
+        .analysis-grid { display: grid; gap: 20px; }
+        .analysis-box { background-color: var(--bg-tertiary); padding: 20px; border-radius: 10px; }
+        .analysis-box h3 { font-size: 1.3rem; margin-bottom: 15px; border-left: 4px solid var(--accent-primary); padding-left: 10px; }
+        .analysis-box p, .analysis-box li { font-family: 'Roboto', sans-serif; color: var(--color-primary); }
+        .analysis-box ul { list-style: none; padding-left: 0; }
+        .analysis-box li { margin-bottom: 10px; padding-left: 25px; position: relative; }
+        .synergy-item::before { content: '✓'; color: var(--synergy-color); position: absolute; left: 0; font-weight: bold; font-size: 1.2rem; }
+        .counter-item::before { content: '✗'; color: var(--counter-color); position: absolute; left: 0; font-weight: bold; font-size: 1.2rem; }
+        .team-comp { margin-bottom: 15px; }
+        .team-comp strong { color: var(--color-headings); display: block; margin-bottom: 5px;}
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.2rem; }
+            .controls { flex-direction: column; align-items: stretch; }
+        }
+        @media (max-width: 480px) {
+            #palmon-grid { grid-template-columns: 1fr; }
+            .filter-group { flex-direction: column; align-items: stretch; }
+            .modal-content { padding: 20px; }
+            .modal-header h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ultimate Palmon World Database</h1>
+            <p>The definitive resource for Palmon analysis, strategies, and team compositions.</p>
+        </header>
+
+        <section class="controls">
+            <div class="search-wrapper">
+                <input type="text" id="search-input" placeholder="Search by Palmon name...">
+            </div>
+            <div class="filter-group">
+                <select id="filter-rarity">
+                    <option value="all">All Rarities</option>
+                    <option value="UR">UR</option>
+                    <option value="SSR">SSR</option>
+                    <option value="SR">SR</option>
+                </select>
+                <select id="filter-type">
+                    <option value="all">All Types</option>
+                    <option value="Earth">Earth</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Water">Water</option>
+                    <option value="Electricity">Electricity</option>
+                    <option value="Unknown">Unknown</option>
+                </select>
+                <select id="filter-row">
+                    <option value="all">All Rows</option>
+                    <option value="Front">Front</option>
+                    <option value="Back">Back</option>
+                    <option value="Worker">Worker</option>
+                </select>
+            </div>
+            <button id="reset-filters" class="action-button">Reset</button>
+        </section>
+        
+        <section class="analysis-section">
+            <h2>Meta Analysis</h2>
+            <div class="charts-container">
+                <div class="chart-box type-effectiveness">
+                    <h3>Type Effectiveness</h3>
+                    <p>
+                        <span class="type-icon" style="background-color: var(--type-water);">H₂O</span> >
+                        <span class="type-icon" style="background-color: var(--type-fire);">FIRE</span> >
+                        <span class="type-icon" style="background-color: var(--type-earth);">GRN</span> >
+                        <span class="type-icon" style="background-color: var(--type-electricity);">ELEC</span> >
+                        <span class="type-icon" style="background-color: var(--type-water);">H₂O</span>
+                    </p>
+                    <p style="font-size: 1rem; color: var(--color-secondary); margin-top: 10px;">(Attacking type deals increased damage to defending type)</p>
+                </div>
+                <div class="chart-box">
+                    <h3>Pals by Rarity</h3>
+                    <canvas id="rarity-chart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Pals by Type</h3>
+                    <canvas id="type-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <main id="palmon-grid">
+            <!-- Palmon cards are dynamically generated by JavaScript -->
+        </main>
+        
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop">
+        <div id="modal-content" class="modal-content">
+            <!-- Modal content is dynamically generated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+    // --- DATABASE WITH FULL ANALYSIS ---
+    const palmons = [
+      // SR PALS
+      { "heroName": "Flouffant", "type": "Earth", "rarity": "SR", "jobTags": "Harvester, Healer", "row": "Worker", "skill1Name": "Entangle", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Summon Thorns", "skill2Desc": "Deals 960% damage to enemies.", "skill3Name": "Nature's Blessing (Passive)", "skill3Desc": "Crop output +35% when working a Planting job.", "analysis": {"role": "Worker / Farmer", "simple": "A dedicated worker Pal whose specialty is increasing crop output. Decent AoE damage for early-game combat.", "deepDive": "Flouffant is primarily a worker Pal, excelling at Planting jobs thanks to its Nature's Blessing passive. In combat, its skills are straightforward but its AoE rage skill, Summon Thorns, can be useful for clearing weak enemy waves in the early stages of the game."} },
+      { "heroName": "Graffitty", "type": "Earth", "rarity": "SR", "jobTags": "Planting, Harvesting, Watering, Logging, Sawing, Mining", "row": "Worker", "skill1Name": "Paintball", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Splash of Color", "skill2Desc": "A long-ranged attack that deals 960% damage to a single enemy.", "skill3Name": "Deft Paws (Passive)", "skill3Desc": "Ore output +35% when working a Mining job.", "analysis": {"role": "Worker / Miner", "simple": "A jack-of-all-trades worker that specializes in boosting ore output from Mining jobs.", "deepDive": "While Graffitty has an impressive list of job tags, its true value lies in its Deft Paws passive, which provides a significant boost to Mining operations. Its combat skills are single-target focused, making it a less effective fighter compared to other options."} },
+      { "heroName": "Herculeaf", "type": "Earth", "rarity": "SR", "jobTags": "Sawing, Building", "row": "Worker", "skill1Name": "Urssault", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Powerful Pounce", "skill2Desc": "Gives a nearby enemy a proper thumping, dealing 960% damage.", "skill3Name": "Bear-y Strong (Passive)", "skill3Desc": "Lumber output +35% when working a Sawing job.", "analysis": {"role": "Worker / Sawyer", "simple": "A strong worker whose expertise lies in increasing lumber output from Sawing jobs.", "deepDive": "Herculeaf is the go-to SR Pal for improving your lumber production line. The Bear-y Strong passive makes it an essential worker for any camp focused on wood resources. Its Powerful Pounce gives it respectable single-target damage for an SR worker."} },
+      { "heroName": "Spinchilla", "type": "Earth", "rarity": "SR", "jobTags": "Miner, Extractor", "row": "Worker", "skill1Name": "Woozy Wallop", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Whirling Leaves", "skill2Desc": "Deals 960% damage to enemies.", "skill3Name": "Lucky Klutz (Passive)", "skill3Desc": "Ore output +35% when working a Mining job.", "analysis": {"role": "Worker / Miner", "simple": "An effective ore specialist for your camp. Its AoE rage skill can be helpful in early fights.", "deepDive": "Similar to Graffitty, Spinchilla shines with its ore-boosting passive, Lucky Klutz. It's a valuable asset for any mining operation. Its combat profile is slightly better than Graffitty's due to the AoE nature of its Whirling Leaves skill."} },
+      { "heroName": "Kilohopp", "type": "Electricity", "rarity": "SR", "jobTags": "Charging, Trainer", "row": "Worker", "skill1Name": "Fluff Static", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Power Surge", "skill2Desc": "Deals 720% damage to all nearby enemies.", "skill3Name": "Static Fluff (Passive)", "skill3Desc": "Electricity output +35% when working a Charging job.", "analysis": {"role": "Worker / Charger", "simple": "The primary SR choice for generating electricity for your camp's needs.", "deepDive": "Kilohopp's main function is to power your base via its Static Fluff passive. It's an indispensable worker for maintaining electricity-dependent structures. Its Power Surge rage skill provides some minor AoE damage."} },
+      { "heroName": "Emboa", "type": "Fire", "rarity": "SR", "jobTags": "Smelting, Magicker", "row": "Worker", "skill1Name": "Springboard Spike", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Heating Up", "skill2Desc": "Gains +60% Attack for 9s.", "skill3Name": "Thermal Recycling (Passive)", "skill3Desc": "Steel output +35% when working a Smelting job.", "analysis": {"role": "Worker / Smelter", "simple": "The essential SR worker for boosting Steel production in your furnaces. Can buff its own attack in combat.", "deepDive": "Emboa is vital for early-to-mid game steel production. Its passive, Thermal Recycling, keeps the forges running efficiently. Uniquely for an SR worker, its rage skill 'Heating Up' is a self-buff, which can lead to surprisingly high damage for a short duration."} },
+      { "heroName": "Auktyke", "type": "Water", "rarity": "SR", "jobTags": "Watering, Analyzing", "row": "Front", "skill1Name": "Princely Peck", "skill1Desc": "Deals 208% damage to a single enemy.", "skill2Name": "Geyser Jet", "skill2Desc": "Deals 672% damage to a single enemy.", "skill3Name": "Frost Resist (Passive)", "skill3Desc": "Gains +15% max HP while in combat.", "analysis": {"role": "Early-Game Tank", "simple": "A surprisingly durable front-line Pal for the early game thanks to its passive HP boost.", "deepDive": "Auktyke is one of the few SR Pals designed for combat. Its Frost Resist passive gives it a valuable +15% HP, making it a decent starter tank. Its damage is purely single-target and won't scale into the late game, but it's a solid choice for your initial front line."} },
+
+      // SSR PALS
+      { "heroName": "Axollium", "type": "Earth", "rarity": "SSR", "jobTags": "Extracting", "row": "Front", "skill1Name": "Lacerating Leek", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Shallot Slam", "skill2Desc": "Deals 750% damage to enemies in its path and lowers their Accuracy by 20% for 3s.", "skill3Name": "Savage Scallion (Passive)", "skill3Desc": "Dreamium output speed +60%.", "analysis": {"role": "Front-line Debuffer / Worker", "simple": "A solid front-liner who debuffs enemy accuracy. Also excels at producing Dreamium.", "deepDive": "Axollium is a dual-purpose Pal. In combat, its Shallot Slam provides decent linear AoE damage and, more importantly, a valuable accuracy debuff that can cause enemy attacks to miss. Outside of combat, it's a top-tier Dreamium extractor."} },
+      { "heroName": "Bruiseberry", "type": "Earth", "rarity": "SSR", "jobTags": "Trainer", "row": "Worker", "skill1Name": "Berry Bash", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Fruit Punch-Up", "skill2Desc": "Deals 1500% damage to a nearby enemy.", "skill3Name": "Tireless (Passive)", "skill3Desc": "Training speed +60% in an Armigo Hut.", "analysis": {"role": "Worker / Trainer", "simple": "The best-in-slot trainer for leveling up your Armigos quickly. Packs a heavy punch in combat.", "deepDive": "Bruiseberry's primary role is non-combatant; its Tireless passive provides a massive speed boost to Armigo training. However, its Fruit Punch-Up rage skill has a very high 1500% damage multiplier, making it a surprisingly potent single-target damage dealer if you need to use it in a fight."} },
+      { "heroName": "Cerverdant", "type": "Earth", "rarity": "SSR", "jobTags": "Lumber", "row": "Worker", "skill1Name": "Force of Nature", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Verdant Grace", "skill2Desc": "All allied Earth-type Palmon gain +30% Attack for 5s.", "skill3Name": "Verdant Bounty (Passive)", "skill3Desc": "Wood output +60% when logging.", "analysis": {"role": "Team Buffer / Worker", "simple": "A vital worker for wood production that can also provide a powerful Attack buff to all Earth allies in combat.", "deepDive": "Cerverdant is a key component of mono-Earth teams. While its main job is boosting wood output, its Verdant Grace skill is a game-changer in combat, providing a significant team-wide buff. This makes it a high-priority support for any Earth-focused lineup, especially when paired with UR damage dealers like Baboom."} },
+      { "heroName": "Lendanear", "type": "Earth", "rarity": "SSR", "jobTags": "Healing", "row": "Back", "skill1Name": "Heart Blitz", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Rejuvenate", "skill2Desc": "Grants a 20% damage reduction bonus to 1 random allied Palmon.", "skill3Name": "Tender Care (Passive)", "skill3Desc": "Healing speed +27 in a Hospital.", "analysis": {"role": "Support / Protector", "simple": "A dedicated backline support who protects allies by reducing the damage they take.", "deepDive": "Lendanear is a pure defensive support. Its Rejuvenate skill can be a lifesaver, applying a 20% damage reduction buff to an ally. While the targeting is random, it often hits the Pal taking the most damage. It's a great addition to teams that need extra survivability to protect their main damage dealers."} },
+      { "heroName": "Terrastudo", "type": "Earth", "rarity": "SSR", "jobTags": "Mining", "row": "Worker", "skill1Name": "Headbutt", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Tectonic Spin", "skill2Desc": "Deals 1125% damage to all nearby enemy targets.", "skill3Name": "Drillshell (Passive)", "skill3Desc": "Ore output +60% when mining.", "analysis": {"role": "Worker / AoE Damage", "simple": "The premier SSR for boosting ore output. Can deal heavy AoE damage to surrounding enemies in combat.", "deepDive": "Terrastudo is the king of SSR mining. Its Drillshell passive provides a huge boost to ore production. If forced into a fight, its Tectonic Spin is a powerful close-range AoE skill, capable of clearing out groups of enemies that surround it, making it a decent substitute fighter."} },
+      { "heroName": "Rotorlotor", "type": "Electricity", "rarity": "SSR", "jobTags": "Shopkeeping", "row": "Back", "skill1Name": "Charged Strike", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Thunderstorm", "skill2Desc": "Deals 1200% damage to 2 random targets, with a 20% chance to paralyze for 2s.", "skill3Name": "Full Tilt (Passive)", "skill3Desc": "Gold output +60% in a Shop.", "analysis": {"role": "Worker / Disruptor", "simple": "Increases Gold generation and can paralyze random enemies in combat, potentially disabling key threats.", "deepDive": "Rotorlotor excels at generating Gold for your camp. In battle, its Thunderstorm skill is notable for its paralysis chance. While unreliable, paralyzing an enemy can prevent them from using their rage skill, which can be a huge momentum swing. It deals decent random damage as a bonus."} },
+      { "heroName": "Thunderclawd", "type": "Electricity", "rarity": "SSR", "jobTags": "Charging", "row": "Worker", "skill1Name": "Thunderstrike", "skill1Desc": "Deals 151.25% damage to the closest enemy and those near it.", "skill2Name": "Dark Cloud", "skill2Desc": "Strikes 4 random enemies for 540% damage.", "skill3Name": "Ionized (Passive)", "skill3Desc": "Electricity output +60% when charging.", "analysis": {"role": "Worker / Multi-Target DPS", "simple": "The best SSR for electricity generation. In combat, it excels at spreading damage across multiple random targets.", "deepDive": "As a worker, Thunderclawd is essential for powering your camp. As a fighter, it's a specialist in multi-target damage. Its Dark Cloud skill hits 4 random targets, making it effective at softening up the entire enemy team rather than focusing on a single threat."} },
+      { "heroName": "Incineraptor", "type": "Fire", "rarity": "SSR", "jobTags": "Smelting, Building", "row": "Back", "skill1Name": "Heat Wave", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Flamewing Dive", "skill2Desc": "Deals 1375% damage to all enemies in a straight line.", "skill3Name": "Eagle Eye (Passive)", "skill3Desc": "Generates high-quality intel quests for bonus treasure.", "analysis": {"role": "Utility / Linear AoE", "simple": "A unique Pal whose main purpose is to generate valuable intel quests. Has a powerful line-based AoE attack.", "deepDive": "Incineraptor's value is almost entirely in its Eagle Eye passive, which is a fantastic source of high-tier rewards from intel quests. In combat, its Flamewing Dive is a very strong linear AoE, excellent for hitting both the front and back rows if they are aligned."} },
+      { "heroName": "Vulcanid", "type": "Fire", "rarity": "SSR", "jobTags": "Smelting", "row": "Worker", "skill1Name": "Blazing Bite", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Trial By Fire", "skill2Desc": "Deals 1500% damage to a single enemy.", "skill3Name": "Hot Diggity Dog (Passive)", "skill3Desc": "Steel output +60% when smelting.", "analysis": {"role": "Worker / Single-Target DPS", "simple": "The top SSR for boosting steel production. Features a very high-damage single-target rage skill.", "deepDive": "Vulcanid is the best SSR-tier worker for your furnaces. Its Hot Diggity Dog passive is crucial for resource management. Like Bruiseberry, it hides a powerful secret: a 1500% single-target damage nuke in its Trial By Fire skill, making it a viable combat substitute."} },
+      { "heroName": "Wyvierno", "type": "Fire", "rarity": "SSR", "jobTags": "Magicker", "row": "Back", "skill1Name": "Fireball", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Scorching Sweep", "skill2Desc": "Deals 924% damage in a fan and inflicts Burn (40% dmg/sec for 7s).", "skill3Name": "Fiery Heart (Passive)", "skill3Desc": "Temperite output speed +60%.", "analysis": {"role": "AoE DPS / DoT Specialist", "simple": "Applies a painful damage-over-time Burn effect to multiple enemies. Also great for crafting Temperite.", "deepDive": "Wyvierno is a great backline damage dealer who excels at sustained damage. Its Scorching Sweep not only deals good initial AoE damage but also applies a powerful Burn. This damage-over-time (DoT) effect is great for wearing down tanky teams. It's also the best SSR for Alchemy Lab work."} },
+      { "heroName": "Maximito", "type": "Water", "rarity": "SSR", "jobTags": "Watering, Building", "row": "Front", "skill1Name": "Trunk Slam", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Elephantine Blessing", "skill2Desc": "The allied Palmon with the lowest HP takes -20% damage for 5s.", "skill3Name": "Big Little Builder (Passive)", "skill3Desc": "Reduces total construction time by 64 minutes.", "analysis": {"role": "Utility / Support Tank", "simple": "Massively speeds up building construction. In combat, protects the most injured ally.", "deepDive": "Maximito's primary value is its incredible Big Little Builder passive, which saves a huge amount of time on construction projects. In combat, it acts as a support tank, applying a damage reduction buff to the ally who needs it most, though its own durability is average."} },
+      { "heroName": "Meowdame", "type": "Water", "rarity": "SSR", "jobTags": "Watering", "row": "Back", "skill1Name": "Dream Orb", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Starlight Blessing", "skill2Desc": "Increases a random allied Palmon's damage by 20% for 5s.", "skill3Name": "Miracle-Maker (Passive)", "skill3Desc": "Increases resource rewards from defeating Bullies by 75%.", "analysis": {"role": "Support / Buffer", "simple": "A backline support who buffs an ally's damage. Fantastic for farming resources from Bullymon.", "deepDive": "Meowdame is a versatile support. Its Miracle-Maker passive makes it the best Pal for farming Bullies for extra resources. In general combat, its Starlight Blessing provides a solid 20% damage buff. While the random targeting can be frustrating, it can also give your main DPS the boost it needs to secure a kill."} },
+      { "heroName": "Platyputz", "type": "Water", "rarity": "SSR", "jobTags": "Logger, Sawing", "row": "Front", "skill1Name": "I Got Just the Thing", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Bubble Shield", "skill2Desc": "Grants a shield equal to 30% of its max HP to the ally with the lowest HP for 6s.", "skill3Name": "Blunt Sense (Passive)", "skill3Desc": "Takes -20% damage.", "analysis": {"role": "Tank / Shielder", "simple": "An exceptionally tanky front-liner who takes less damage passively and can shield the most wounded ally.", "deepDive": "Platyputz is one of the best SSR tanks. Its Blunt Sense passive provides a flat 20% damage reduction, making it inherently durable. Its Bubble Shield skill is fantastic, providing a significant shield to the ally who is closest to death, often preventing a kill and turning the tide of a battle. A top-tier defensive choice."} },
+      { "heroName": "Snowkami", "type": "Water", "rarity": "SSR", "jobTags": "Combat", "row": "Back", "skill1Name": "Frostclaw", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Glacial Howl", "skill2Desc": "Deals 1350% damage to a single enemy and has a 70% chance to Freeze for 2.5s.", "skill3Name": "Wolfy Will (Passive)", "skill3Desc": "Gains +20% Attack while in combat.", "analysis": {"role": "Single-Target DPS / Controller", "simple": "A solid backline damage dealer who can completely disable a single enemy with its Freeze effect.", "deepDive": "Snowkami is an excellent SSR damage dealer and controller. Its Wolfy Will passive gives it a nice damage boost. The main draw is Glacial Howl, which not only hits hard but has a high chance to Freeze a target. A frozen enemy can't act at all, making this skill perfect for neutralizing a major threat like an enemy damage dealer or healer."} },
+      { "heroName": "Squeezel", "type": "Water", "rarity": "SSR", "jobTags": "Combat", "row": "Back", "skill1Name": "Water Spray", "skill1Desc": "Deals 325% damage to a single enemy.", "skill2Name": "Aqua Cannon", "skill2Desc": "Attacks a single enemy 3 times for 510% damage per attack.", "skill3Name": "Water Surge (Passive)", "skill3Desc": "Rage Skill damage +75%.", "analysis": {"role": "Single-Target DPS", "simple": "A pure backline damage dealer who unleashes a devastating multi-hit attack on one target.", "deepDive": "Squeezel is all about raw, focused damage. Its passive directly buffs its rage skill, Aqua Cannon, which hits a single target three times for a total of 1530% damage (before the passive boost!). This makes it one of the highest single-target burst damage dealers in the SSR tier, perfect for eliminating a priority enemy."} },
+
+      // UR PALS
+      { "heroName": "Baboom", "type": "Earth", "rarity": "UR", "jobTags": "Combat, Logging", "row": "Front", "skill1Name": "Stifle", "skill1Desc": "Swings a stick at a single enemy, dealing 525.4% damage.", "skill2Name": "Powerstrike", "skill2Desc": "Deals 2220% damage to a single enemy in melee range, with a 70% chance to stun for 2s.", "skill3Name": "Nature's Gift (Passive)", "skill3Desc": "When in the lineup, all Earth Palmon gain +20% Attack.", "analysis": {"role": "Bruiser / Controller", "simple": "A powerful Earth warrior who smashes and stuns single targets, disabling key enemy threats while buffing other Earth allies.", "deepDive": "Baboom is a premier single-target eliminator. His Powerstrike has a massive 2220% multiplier and a high 70% stun chance, which can neutralize an enemy tank or damage dealer for 2 seconds. His passive, Nature's Gift, makes him a cornerstone for mono-Earth teams, providing a significant +20% Attack boost to all Earth allies just by being on the team.", "synergies": ["<strong>Statchew:</strong> Creates a near-unbreakable Earth front line. Statchew's damage reduction lets Baboom focus on offense.", "<strong>Cerverdant:</strong> A worker Pal whose combat skill boosts Earth Palmon attack, stacking with Baboom's own passive for immense damage.", "<strong>Lendanear:</strong> A dedicated backline support who can provide damage reduction to keep Baboom healthy."], "counters": ["<strong>AoE Damage:</strong> Pals like Fingenue or Blazeal can bypass his single-target focus and wear down his entire team.", "<strong>High Evasion:</strong> Abuzzinian's high Evasion may cause the crucial Powerstrike to miss.", "<strong>Widespread Debuffs:</strong> Barkplug can reduce his entire team's defense, making him more vulnerable."], "teamComps": ["<strong>Earthen Fist (Mono-Earth):</strong> Front: Baboom, Statchew. Back: Lendanear (or Cerverdant for pure offense). A slow, powerful team that grinds opponents down.", "<strong>Stun Lock:</strong> Front: Baboom, Dolphriend. Back: A high-damage Pal like Mantleray. Aims to keep key enemies perpetually stunned."]} },
+      { "heroName": "Statchew", "type": "Earth", "rarity": "UR", "jobTags": "Combat, Mining", "row": "Front", "skill1Name": "Gnash", "skill1Desc": "Bites a nearby enemy, dealing 525.4% damage.", "skill2Name": "Protective Roar", "skill2Desc": "Enemy front-row Palmon deal 13.5% less damage for 5s.", "skill3Name": "Sentinel (Passive)", "skill3Desc": "Front-row Palmon in this Palmon's squad take -20% damage.", "analysis": {"role": "Pure Tank / Protector", "simple": "The ultimate guardian. He massively reduces damage for front-row allies and weakens enemy attackers.", "deepDive": "Statchew is the definitive tank in the game. His passive, Sentinel, grants a massive 20% damage reduction to the entire front row—a cornerstone ability for any defensive strategy. His rage skill, Protective Roar, further cripples the enemy's front line. He doesn't do much damage, but his job is to ensure nobody else on his team takes much damage either.", "synergies": ["<strong>Fragile Front-liners:</strong> Enables the use of high-damage, low-health front-liners like Ninjump by drastically increasing their survivability.", "<strong>Baboom:</strong> Forms the other half of the ultimate Earth tank duo, creating a formidable wall.", "<strong>Any High-Value Backline:</strong> Protects squishy damage dealers like Mantleray or Lucidina by keeping the front line alive longer."], "counters": ["<strong>Backline Assassins:</strong> Hoofrit completely bypasses the front row that Statchew is protecting, targeting the vulnerable damage dealers directly.", "<strong>Defense Reduction:</strong> Barkplug's passive shreds defense, partially negating Statchew's damage reduction by making every hit sting more.", "<strong>True Damage:</strong> Any Palmon that can deal damage that ignores defense/reduction will be a hard counter."], "teamComps": ["<strong>The Great Wall:</strong> Front: Statchew, Dolphriend. Back: Lendanear. A team built to be almost unkillable, winning by outlasting the opponent.", "<strong>Guardian Core:</strong> Front: Statchew, Ninjump. Back: Fingenue. Statchew protects the glass cannon Ninjump, allowing him to deal massive damage safely."]} },
+      { "heroName": "Surveilynx", "type": "Earth", "rarity": "UR", "jobTags": "Combat, Watering", "row": "Front", "skill1Name": "Snap Shot", "skill1Desc": "Deals 341.51% damage to a single enemy.", "skill2Name": "Shadow Step", "skill2Desc": "Teleports to 3 nearby spots, dealing 1387.5% damage to all enemies in a fan.", "skill3Name": "Elite Drills (Passive)", "skill3Desc": "Can Quick Train 1000 Armigo/day. Armigo gain +20% Attack when defending your Camp.", "analysis": {"role": "AoE Damage / Camp Defense", "simple": "A swift attacker who damages multiple enemies in a fan-shaped area. Also boosts your army for camp defense.", "deepDive": "Surveilynx offers a blend of combat prowess and unique camp utility. In battle, his Shadow Step is excellent for clearing groups of enemies or damaging a clustered front line. His main draw is often his passive, Elite Drills, which provides a significant +20% Attack boost to defending Armigos, making your camp much harder to raid. He is a solid combatant with unmatched defensive utility.", "synergies": ["<strong>Crowd Control:</strong> Pals that group enemies up (e.g., via taunt) or stun them in place (Baboom, Dolphriend) make it easy for Shadow Step to hit multiple targets.", "<strong>Defense Debuffers:</strong> Barkplug's defense reduction makes Surveilynx's multi-hit attack significantly more effective."], "counters": ["<strong>Spread Formations:</strong> Teams that are not clustered together will minimize the damage from Shadow Step.", "<strong>High Single-Target Burst:</strong> Can be eliminated by nukers like Baboom or Lucidina before he can use his rage skill."], "teamComps": ["<strong>Defensive Specialist:</strong> While used in combat, his primary role is often fulfilled passively. He can slot into most teams as a general AoE damage dealer.", "<strong>Earth Cleave:</strong> Front: Surveilynx, Baboom. Back: Cerverdant (for buff). A composition focused on AoE and single target physical damage."]} },
+      { "heroName": "Abuzzinian", "type": "Electricity", "rarity": "UR", "jobTags": "Charging", "row": "Back", "skill1Name": "Electric Surge", "skill1Desc": "Deals 525.4% damage to a single enemy.", "skill2Name": "Nightstorm", "skill2Desc": "Deals 1387.5% damage to 3 random enemies, with a 20% chance to Paralyze them for 3.5s.", "skill3Name": "Phantomstep (Passive)", "skill3Desc": "Gains +30% Evasion while in combat.", "analysis": {"role": "Disruptor / Dodge Tank", "simple": "A slippery backline pest who paralyzes multiple enemies and is very hard to hit.", "deepDive": "Abuzzinian is one of a kind. His passive 30% Evasion makes him inherently tanky against physical attacks, and his Nightstorm skill can be game-winning. Paralyzing up to 3 enemies prevents them from using their powerful Rage Skills, completely disrupting their strategy. While his damage is random, the control he brings is top-tier.", "synergies": ["<strong>Tanks:</strong> A solid front line (Statchew, Dolphriend) gives him the time he needs to charge his Nightstorm skill.", "<strong>Barkplug:</strong> Forms a potent Electricity duo. Barkplug's defense shred complements Abuzzinian's damage, and both can paralyze.", "<strong>Mantleray:</strong> Another Electricity damage dealer to create a full elemental team that benefits from type advantage."], "counters": ["<strong>Guaranteed-Hit Skills:</strong> Skills that cannot miss will bypass his high Evasion.", "<strong>Hoofrit:</strong> As a backline Pal, he is a prime target for Hoofrit's Blazing Volley, which can stun and kill him.", "<strong>Cleansers:</strong> Any Pal that can remove debuffs will negate his paralysis."], "teamComps": ["<strong>Shock & Awe (Control):</strong> Front: Barkplug. Back: Abuzzinian, Mantleray. A team focused on paralysis, defense reduction, and overwhelming electrical damage.", "<strong>Evasive Maneuvers:</strong> Front: Statchew. Back: Abuzzinian, Lendanear. A highly defensive team that relies on dodging, damage reduction, and paralysis to win."]} },
+      { "heroName": "Barkplug", "type": "Electricity", "rarity": "UR", "jobTags": "Charging", "row": "Front", "skill1Name": "Maelstrom Bolt", "skill1Desc": "Strikes up to 5 enemies, dealing 281.2% damage to each.", "skill2Name": "Overcharge", "skill2Desc": "Deals 2331% damage to a single enemy, with a 20% chance to paralyze.", "skill3Name": "Ion Disruption (Passive)", "skill3Desc": "All enemy DEF -20%.", "analysis": {"role": "Debuffer / Offensive Support", "simple": "A meta-defining front-line support who makes the entire enemy team take more damage.", "deepDive": "Barkplug is a truly game-changing support. His passive, Ion Disruption, provides a permanent 20% defense reduction to the entire enemy team, a massive damage boost for your whole squad. He is not just a debuffer; his Maelstrom Bolt hits multiple targets and his Overcharge can paralyze a key threat. He makes every other damage dealer on your team significantly better.", "synergies": ["<strong>AoE Damage Dealers:</strong> Pals like Fingenue and Blazeal benefit immensely, as their damage is amplified across every target hit.", "<strong>Fast Attackers:</strong> High-crit Pals like Mantleray or multi-hitters like Ninjump see their damage skyrocket.", "<strong>Literally Everyone:</strong> A universal 20% enemy defense reduction is arguably the strongest support ability in the game. He fits anywhere."], "counters": ["<strong>High Burst Damage:</strong> As a front-liner, he can be focused down and eliminated quickly to remove his powerful debuff.", "<strong>Earth Types:</strong> Has a natural type disadvantage against Earth pals like Baboom and Statchew, making him easier to defeat."], "teamComps": ["<strong>Universal Core:</strong> Front: Barkplug, a Tank (like Statchew). Back: Your best DPS (like Lucidina). Barkplug is the centerpiece that elevates the whole team.", "<strong>Electric Annihilation:</strong> Front: Barkplug. Back: Mantleray, Abuzzinian. A mono-elec team that combines defense shred, crit, and paralysis."]} },
+      { "heroName": "Mantleray", "type": "Electricity", "rarity": "UR", "jobTags": "Combat", "row": "Back", "skill1Name": "Lightning Bolt", "skill1Desc": "Deals 525.4% damage to a single enemy.", "skill2Name": "Electric Burst", "skill2Desc": "Fires 3 electric bombs randomly, each dealing 1406% damage.", "skill3Name": "Stinging Spark (Passive)", "skill3Desc": "Gains +30% Crit Rate while in combat.", "analysis": {"role": "Glass Cannon / Burst DPS", "simple": "A backline sniper who deals massive critical damage to random enemies.", "deepDive": "Mantleray is a pure damage dealer. With a passive +30% Crit Rate, he is built to land devastating hits. His Electric Burst skill fires 3 bombs that can all hit the same target, potentially one-shotting any non-tank Palmon in the game. He is fragile and relies on RNG for targeting, but his damage potential is immense.", "synergies": ["<strong>Barkplug:</strong> The quintessential partner. Barkplug's defense shred makes Mantleray's crits hit for astronomical numbers.", "<strong>Tanks & Protectors:</strong> Statchew, Platyputz, and Lendanear are crucial for keeping him alive long enough to use his skill.", "<strong>Attack Buffers:</strong> Meowdame can provide a damage buff that further increases his output."], "counters": ["<strong>Backline Assassins:</strong> Hoofrit is Mantleray's worst nightmare, as he can directly target and stun/kill him.", "<strong>Taunters:</strong> Pals that force attacks onto them can prevent Mantleray's bombs from hitting priority squishy targets.", "<strong>High Evasion:</strong> Abuzzinian can potentially dodge his bombs."], "teamComps": ["<strong>The Glass Cannon:</strong> Front: Statchew, Platyputz. Back: Mantleray. A team built entirely around protecting Mantleray so he can win the fight.", "<strong>Electric Duo:</strong> Front: Dolphriend. Back: Mantleray, Barkplug. A more balanced approach with a tank, debuffer, and DPS."]} },
+      { "heroName": "Blazeal", "type": "Fire", "rarity": "UR", "jobTags": "Combat, Mining", "row": "Front", "skill1Name": "Hyah!", "skill1Desc": "Deals 525.4% damage to a single enemy.", "skill2Name": "Huuuah!", "skill2Desc": "Releases a wave of fireballs, dealing 1665% damage to all enemies in their path.", "skill3Name": "Tempered Steel (Passive)", "skill3Desc": "Gains 30% Attack while in combat.", "analysis": {"role": "AoE Bruiser", "simple": "A durable front-line fighter who unleashes a wave of fire to damage all enemies in a line.", "deepDive": "Blazeal is a straightforward and effective front-line damage dealer. His passive +30% Attack makes him hit hard, and his rage skill 'Huuuah!' is a powerful linear AoE that can soften up the entire enemy team, often hitting both front and back rows. He is tanky enough to stand in the front and consistent enough to be a reliable source of damage in any Fire or mixed composition.", "synergies": ["<strong>Barkplug:</strong> Like all AoE Pals, his damage is massively amplified by defense reduction.", "<strong>Crowd Control:</strong> Stunning or grouping enemies ensures his linear AoE hits as many targets as possible.", "<strong>Magmolin/Hoofrit:</strong> Forms a powerful Fire-based front line that is both tanky and high-damage."], "counters": ["<strong>Water Types:</strong> Has a natural disadvantage against Water Pals like Fingenue and Dolphriend.", "<strong>Single-Target Nukers:</strong> Can be focused down by Pals like Baboom or Lucidina before he gets his skill off."], "teamComps": ["<strong>Firestorm:</strong> Front: Blazeal, Hoofrit. Back: Wyvierno. A composition focused on overwhelming fire damage, both AoE and single target.", "<strong>Cleave and Weave:</strong> Front: Blazeal, Statchew. Back: Mantleray. Blazeal softens up the team, while Mantleray picks off key targets."]} },
+      { "heroName": "Hoofrit", "type": "Fire", "rarity": "UR", "jobTags": "Combat, Mining", "row": "Front", "skill1Name": "Fiery Charge", "skill1Desc": "Rams a single enemy, dealing 840.64% damage.", "skill2Name": "Blazing Volley", "skill2Desc": "Deals 2497.5% damage to the enemy's back row, with a 60% chance to stun for 2s.", "skill3Name": "Hard-Horned (Passive)", "skill3Desc": "Gains +30% max HP while in combat.", "analysis": {"role": "Backline Assassin / Disruptor", "simple": "A tanky front-liner who bypasses tanks to snipe and stun the enemy's back row.", "deepDive": "Hoofrit is a strategic nightmare for opponents. While he stands in the front, his Blazing Volley rage skill exclusively targets the back row, home to fragile damage dealers and supports. With a huge damage multiplier and a high stun chance, he can single-handedly disable or eliminate the enemy's core strategy. His HP-focused passive makes him surprisingly durable.", "synergies": ["<strong>Other Backline Attackers:</strong> If any other Pals can target the back row, they can combo with Hoofrit to guarantee a kill.", "<strong>Defensive Supports:</strong> Platyputz, Lendanear, and Statchew help him stay alive long enough to use his game-changing skill.", "<strong>Barkplug:</strong> Defense reduction makes his backline snipe even more lethal."], "counters": ["<strong>Durable Backliners:</strong> Some backline Pals might be tanky enough to survive his initial volley (e.g., Abuzzinian with Evasion).", "<strong>Crowd Control:</strong> Being stunned or paralyzed before he can use his skill negates his entire purpose.", "<strong>Himself:</strong> An enemy Hoofrit can target your backline just as effectively."], "teamComps": ["<strong>Backline Breaker:</strong> Front: Hoofrit, Statchew. Back: A self-sufficient Pal like Abuzzinian. The goal is to survive while Hoofrit dismantles the enemy from the back.", "<strong>Fire & Fury:</strong> Front: Hoofrit, Magmolin. Back: Wyvierno. A full Fire team that threatens both the front and back lines."]} },
+      { "heroName": "Magmolin", "type": "Fire", "rarity": "UR", "jobTags": "Combat, Mining", "row": "Front", "skill1Name": "Claw", "skill1Desc": "Deals 525.4% damage to a single enemy.", "skill2Name": "Lava Shock", "skill2Desc": "Slams the ground, dealing 2775% damage to a single enemy.", "skill3Name": "Tempered Steel (Passive)", "skill3Desc": "Increases Steel output of all Furnaces by 100%. Gains +30% HP in combat.", "analysis": {"role": "Tank / Single-Target Nuker", "simple": "An extremely durable tank that can also deal immense damage to a single target. Also doubles your camp's steel production.", "deepDive": "Magmolin is a dual-threat Pal. His passive gives him a +30% HP boost and an incredible 100% boost to camp-wide Steel production, making him invaluable. In combat, he's a top-tier tank thanks to his high HP, but his Lava Shock skill also has one of the highest single-target multipliers in the game (2775%). He can absorb huge amounts of punishment and then eliminate the biggest threat on the enemy team.", "synergies": ["<strong>Barkplug:</strong> Defense reduction makes his Lava Shock even more of a guaranteed kill.", "<strong>Supports:</strong> Lendanear and Platyputz add shields and damage reduction on top of his massive HP pool, making him nearly immortal.", "<strong>Blazeal/Hoofrit:</strong> Can form a formidable, all-purpose Fire front line."], "counters": ["<strong>Water Types:</strong> His Fire typing makes him vulnerable to high-damage Water Pals.", "<strong>Percent-HP Damage:</strong> Any skills that deal damage based on a target's max HP would shred through Magmolin.", "<strong>Control Effects:</strong> Stuns and paralysis can prevent him from using his devastating Lava Shock."], "teamComps": ["<strong>The Volcano:</strong> Front: Magmolin, Statchew. Back: Lendanear. A super-tanky team that relies on Magmolin to eventually kill everything.", "<strong>Molten Core:</strong> Front: Magmolin, Hoofrit. Back: A support Pal. A balanced Fire core that can deal with any threat."]} },
+      { "heroName": "Dolphriend", "type": "Water", "rarity": "UR", "jobTags": "Combat, Logging", "row": "Front", "skill1Name": "Smash", "skill1Desc": "Deals 525.4% damage to an enemy.", "skill2Name": "Rush Wave", "skill2Desc": "Smashes a target, dealing 2109% damage, with a 70% chance to stun for 3s.", "skill3Name": "Tidal Guard (Passive)", "skill3Desc": "Gains +30% max HP while in combat.", "analysis": {"role": "Tank / Controller", "simple": "A very tanky Water-type brawler who can stun-lock a key enemy for a long duration.", "deepDive": "Dolphriend is a premier front-line controller. His main strength is the 3-second stun on his Rush Wave skill, which is one of the longest single-target stuns available. Combined with a high 70% chance to land, he can reliably take a key enemy out of the fight. His passive gives him +30% HP, making him incredibly hard to take down. He is the quintessential Water tank.", "synergies": ["<strong>Statchew:</strong> Pairing the best HP tank with the best damage reduction tank creates an impenetrable wall.", "<strong>Follow-up Damage:</strong> Pals like Lucidina or Baboom can capitalize on the 3-second stun to guarantee their own high-damage skills land.", "<strong>Ninjump:</strong> Forms a Water-type front line with a mix of tankiness and high damage."], "counters": ["<strong>Electricity Types:</strong> His Water typing makes him extremely vulnerable to the likes of Mantleray and Barkplug.", "<strong>Stun Immunity/Cleanses:</strong> Any Pal that can ignore or remove his stun will render him far less effective.", "<strong>AoE Damage:</strong> Can be worn down by AoE skills that bypass his single-target focus."], "teamComps": ["<strong>Tidal Lock:</strong> Front: Dolphriend, Baboom. Back: Mantleray. A team focused on chaining stuns to disable and destroy the enemy.", "<strong>Unsinkable:</strong> Front: Dolphriend, Statchew. Back: Fingenue. A hyper-durable front line that protects a powerful backline AoE nuker."]} },
+      { "heroName": "Fingenue", "type": "Water", "rarity": "UR", "jobTags": "Combat, Watering", "row": "Back", "skill1Name": "Spurt", "skill1Desc": "Fires a water projectile, dealing 525.4% damage.", "skill2Name": "Waterspout", "skill2Desc": "Summons a water column around the nearest enemy, dealing 1803.75% damage to all enemies in range.", "skill3Name": "Ocean's Favor (Passive)", "skill3Desc": "Deals +30% damage while in battle.", "analysis": {"role": "AoE Burst DPS", "simple": "A backline Water cannon that deals heavy AoE damage to grouped-up enemies.", "deepDive": "Fingenue is a top-tier AoE damage dealer. Her Ocean's Favor passive gives her a flat +30% damage boost, and her Waterspout skill deals substantial damage in a large area around the nearest enemy. She excels at punishing clustered enemy formations and softening up the entire enemy team for her allies to clean up. Her effectiveness depends on enemy positioning, but her damage ceiling is very high.", "synergies": ["<strong>Barkplug:</strong> The defense reduction massively amplifies her AoE damage potential.", "<strong>Tanks:</strong> A strong front line (Dolphriend, Statchew) is essential to protect her while she charges her skill.", "<strong>Groupers/Controllers:</strong> Any Pal that can pull enemies together or hold them in place makes her Waterspout devastatingly effective."], "counters": ["<strong>Electricity Types:</strong> Her Water typing makes her a prime target for electrical damage.", "<strong>Backline Assassins:</strong> Hoofrit can target her directly and potentially eliminate her before she can act.", "<strong>Spread Formations:</strong> Teams that spread out will minimize her AoE damage."], "teamComps": ["<strong>Tidal Wave:</strong> Front: Dolphriend, Platyputz. Back: Fingenue. A durable Water-focused team that protects Fingenue so she can wipe the enemy team.", "<strong>Deluge of Pain:</strong> Front: Barkplug, Statchew. Back: Fingenue. Combines defense shred with AoE for maximum team-wide damage."]} },
+      { "heroName": "Lucidina", "type": "Water", "rarity": "UR", "jobTags": "Combat, Watering", "row": "Back", "skill1Name": "Phantasm", "skill1Desc": "Launches an orb, dealing 525.4% damage to a single target.", "skill2Name": "Torment", "skill2Desc": "Increases a target's damage received by 10%, then deals 2590% damage to it.", "skill3Name": "Dream Shadow (Passive)", "skill3Desc": "Gains +30% Crit Rate while in combat.", "analysis": {"role": "Single-Target Assassin / Amplifier", "simple": "A deadly backline assassin who marks a target to receive more damage before hitting them with a massive blow.", "deepDive": "Lucidina is the ultimate single-target executioner. Her skill, Torment, is unique: it first applies a 10% damage vulnerability debuff and then hits for a colossal 2590% damage. This makes her incredibly effective at eliminating the single most important enemy Pal. Her passive grants +30% Crit Rate, giving her a chance to make that final blow even more devastating. She requires protection, but she can turn the tide by removing any threat.", "synergies": ["<strong>Controllers:</strong> Pals that can stun a target, like Dolphriend or Baboom, guarantee that Lucidina's Torment will hit its mark.", "<strong>Barkplug:</strong> The 20% defense reduction stacks with her 10% vulnerability debuff, leading to absurd levels of damage.", "<strong>Tanks:</strong> Statchew and Platyputz are essential for keeping her alive in the backline."], "counters": ["<strong>Hoofrit:</strong> Her nemesis. As a fragile backliner, she is the ideal target for Hoofrit's Blazing Volley.", "<strong>Taunt/Redirects:</strong> A tank that can force her to target them instead of a squishy damage dealer can neutralize her strategy.", "<strong>Burst Damage:</strong> If the enemy team can kill her before she uses her skill, she provides no value."], "teamComps": ["<strong>The Scalpel:</strong> Front: Dolphriend, Statchew. Back: Lucidina. A team focused on protecting Lucidina while she surgically removes the biggest enemy threat.", "<strong>Nightmare Fuel:</strong> Front: A tank. Back: Lucidina, Abuzzinian. Combines paralysis, evasion, and a massive single-target nuke for a powerful control/burst combo."]} },
+      { "heroName": "Ninjump", "type": "Water", "rarity": "UR", "jobTags": "Combat", "row": "Front", "skill1Name": "Flow Like a River", "skill1Desc": "Slashes a single enemy multiple times, dealing 525.4% damage.", "skill2Name": "Strike Like a Waterfall", "skill2Desc": "Flings 3 shuriken in a fan, each dealing 1248.75% damage.", "skill3Name": "Tidal Strike (Passive)", "skill3Desc": "Gains +30% Attack while in combat.", "analysis": {"role": "Front-line AoE DPS", "simple": "A fragile but highly damaging ninja who attacks from the front row with a fan of shuriken.", "deepDive": "Ninjump is a high-risk, high-reward front-line damage dealer. Unlike most front-liners, he is not tanky. His strength lies in his +30% Attack passive and his rage skill, which flings 3 powerful shuriken in a fan shape. When positioned correctly, he can hit multiple enemies for huge damage. He is a 'glass cannon' that requires significant protection to function.", "synergies": ["<strong>Statchew:</strong> His absolute best partner. Statchew's Sentinel passive is what makes a front-line Ninjump viable, mitigating his fragility.", "<strong>Platyputz/Lendanear:</strong> Shields and damage reduction further increase his survivability.", "<strong>Dolphriend:</strong> Forms a Water-type front line, where Dolphriend can tank and stun while Ninjump deals damage."], "counters": ["<strong>Focused Fire:</strong> Without protection, he will be eliminated very quickly by enemy damage.", "<strong>Electricity Types:</strong> His Water typing makes him weak to electrical attacks.", "<strong>AoE Damage:</strong> Can be easily worn down by skills that hit the entire front line."], "teamComps": ["<strong>Ninja Guard:</strong> Front: Ninjump, Statchew. Back: Lendanear. The core strategy of protecting a glass cannon front-liner to let him shine.", "<strong>Flowing Blades:</strong> Front: Ninjump, Dolphriend. Back: Fingenue. An all-Water team with a mix of control, single-target, and AoE damage."]} }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const grid = document.getElementById('palmon-grid');
+        const searchInput = document.getElementById('search-input');
+        const rarityFilter = document.getElementById('filter-rarity');
+        const typeFilter = document.getElementById('filter-type');
+        const rowFilter = document.getElementById('filter-row');
+        const resetButton = document.getElementById('reset-filters');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalContent = document.getElementById('modal-content');
+        
+        // --- Functions ---
+        
+        /**
+         * Renders the Palmon cards into the grid.
+         * @param {Array} palmonList - The array of Palmon objects to render.
+         */
+        const renderPals = (palmonList) => {
+            grid.innerHTML = ''; // Clear existing cards
+            if (palmonList.length === 0) {
+                grid.innerHTML = '<div id="no-results">No Palmon found matching your criteria.</div>';
+                return;
+            }
+
+            palmonList.forEach(pal => {
+                const card = document.createElement('article');
+                card.className = 'palmon-card';
+                const palType = pal.type || 'Unknown';
+                const palRarity = pal.rarity || 'Unknown';
+                const palRow = pal.row || 'N/A';
+                
+                card.setAttribute('data-type', palType);
+                
+                const skill1HTML = pal.skill1Name ? `<div class="skill"><h3>${pal.skill1Name}</h3><p>${pal.skill1Desc}</p></div>` : '';
+                const skill2HTML = pal.skill2Name ? `<div class="skill"><h3>${pal.skill2Name}</h3><p>${pal.skill2Desc}</p></div>` : '';
+                const skill3HTML = pal.skill3Name ? `<div class="skill"><h3>${pal.skill3Name}</h3><p>${pal.skill3Desc}</p></div>` : '';
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-header-top">
+                            <h2>${pal.heroName}</h2>
+                            <div class="tags">
+                                <span class="tag rarity-${palRarity.toLowerCase()}">${palRarity}</span>
+                                <span class="tag type-tag" data-type="${palType}">${palType}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <div class="info-item"><strong>Role:</strong><span>${pal.analysis.role || 'N/A'}</span></div>
+                        <div class="info-item"><strong>Row:</strong><span>${palRow}</span></div>
+                        <div class="info-item"><strong>Jobs:</strong><span>${pal.jobTags || 'N/A'}</span></div>
+                    </div>
+                    <div class="card-body">
+                        ${skill1HTML}
+                        ${skill2HTML}
+                        ${skill3HTML}
+                    </div>
+                    <div class="card-footer">
+                        <button class="details-btn" data-pal-name="${pal.heroName}">Deep Dive Analysis</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+        
+        const openModal = (pal) => {
+            const synergiesHTML = pal.analysis.synergies ? pal.analysis.synergies.map(s => `<li class="synergy-item">${s}</li>`).join('') : '<li>No specific synergies identified.</li>';
+            const countersHTML = pal.analysis.counters ? pal.analysis.counters.map(c => `<li class="counter-item">${c}</li>`).join('') : '<li>No specific counters identified.</li>';
+            const teamCompsHTML = pal.analysis.teamComps ? pal.analysis.teamComps.map(t => `<li class="team-comp">${t}</li>`).join('') : '<li>No specific team comps formulated.</li>';
+            
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2>${pal.heroName} - Deep Dive</h2>
+                    <button class="close-btn">×</button>
+                </div>
+                <div class="analysis-grid">
+                    <div class="analysis-box">
+                        <h3>Summary</h3>
+                        <p>${pal.analysis.simple || 'No simple summary available.'}</p>
+                    </div>
+                    <div class="analysis-box">
+                        <h3>In-Depth Analysis</h3>
+                        <p>${pal.analysis.deepDive || 'No deep dive available.'}</p>
+                    </div>
+                    <div class="analysis-box">
+                        <h3>Synergies</h3>
+                        <ul>${synergiesHTML}</ul>
+                    </div>
+                    <div class="analysis-box">
+                        <h3>Counters</h3>
+                        <ul>${countersHTML}</ul>
+                    </div>
+                    <div class="analysis-box">
+                        <h3>Recommended Team Comps</h3>
+                        <ul>${teamCompsHTML}</ul>
+                    </div>
+                </div>
+            `;
+            modalBackdrop.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            modalContent.querySelector('.close-btn').addEventListener('click', closeModal);
+        };
+        
+        const closeModal = () => {
+            modalBackdrop.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+        
+        /**
+         * Filters the palmon list based on current control values and re-renders.
+         */
+        const filterAndRender = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedRarity = rarityFilter.value;
+            const selectedType = typeFilter.value;
+            const selectedRow = rowFilter.value;
+
+            const filteredPals = palmons.filter(pal => {
+                const nameMatch = pal.heroName.toLowerCase().includes(searchTerm);
+                const rarityMatch = selectedRarity === 'all' || pal.rarity === selectedRarity;
+                const typeMatch = selectedType === 'all' || (pal.type || 'Unknown') === selectedType;
+                const rowMatch = selectedRow === 'all' || (pal.row || 'N/A') === selectedRow;
+
+                return nameMatch && rarityMatch && typeMatch && rowMatch;
+            });
+
+            renderPals(filteredPals);
+        };
+        
+        /**
+         * Resets all filters to their default state.
+         */
+        const resetAllFilters = () => {
+            searchInput.value = '';
+            rarityFilter.value = 'all';
+            typeFilter.value = 'all';
+            rowFilter.value = 'all';
+            filterAndRender();
+        };
+        
+        const generateCharts = () => {
+            const rarityOrder = ['UR', 'SSR', 'SR'];
+            const rarityCounts = palmons.reduce((acc, pal) => {
+                const rarity = pal.rarity || 'Unknown';
+                acc[rarity] = (acc[rarity] || 0) + 1;
+                return acc;
+            }, {});
+            const sortedRarityLabels = rarityOrder.filter(r => rarityCounts[r]);
+            const sortedRarityData = sortedRarityLabels.map(r => rarityCounts[r]);
+
+            const typeCounts = palmons.reduce((acc, pal) => {
+                const type = pal.type || 'Unknown';
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+            }, {});
+
+            const rarityCtx = document.getElementById('rarity-chart').getContext('2d');
+            new Chart(rarityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedRarityLabels,
+                    datasets: [{
+                        data: sortedRarityData,
+                        backgroundColor: ['rgba(255, 154, 158, 0.7)', 'rgba(255, 215, 0, 0.7)', 'rgba(192, 192, 192, 0.7)'],
+                        borderColor: ['#ff9a9e', '#ffd700', '#c0c0c0'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: 'white', font: { size: 14 } } } } }
+            });
+
+            const typeCtx = document.getElementById('type-chart').getContext('2d');
+            new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(typeCounts),
+                    datasets: [{
+                        label: 'Count',
+                        data: Object.values(typeCounts),
+                        backgroundColor: [
+                            'rgba(139, 195, 74, 0.7)', // Earth
+                            'rgba(255, 193, 7, 0.7)', // Elec
+                            'rgba(244, 67, 54, 0.7)', // Fire
+                            'rgba(33, 150, 243, 0.7)', // Water
+                            'rgba(158, 158, 158, 0.7)' // Unknown
+                        ],
+                        borderColor: ['#8BC34A', '#FFC107', '#F44336', '#2196F3', '#9E9E9E'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#444' }, ticks: { color: 'white', stepSize: 2 } }, x: { grid: { color: '#444' }, ticks: { color: 'white' } } }
+                }
+            });
+        };
+
+        // --- Event Listeners ---
+        searchInput.addEventListener('input', filterAndRender);
+        rarityFilter.addEventListener('change', filterAndRender);
+        typeFilter.addEventListener('change', filterAndRender);
+        rowFilter.addEventListener('change', filterAndRender);
+        resetButton.addEventListener('click', resetAllFilters);
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && modalBackdrop.style.display === 'flex') {
+                closeModal();
+            }
+        });
+        grid.addEventListener('click', (e) => {
+            const button = e.target.closest('.details-btn');
+            if (button) {
+                const palName = button.dataset.palName;
+                const pal = palmons.find(p => p.heroName === palName);
+                if (pal) openModal(pal);
+            }
+        });
+
+        // --- Initial Render ---
+        filterAndRender();
+        generateCharts();
+    });
+    </script>
+</body>
+</html>
